@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,9 +9,8 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/shurcooL/githubv4"
+	"github.com/mrtazz/plan/pkg/github"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -25,24 +23,6 @@ var (
 		} `cmd:"" help:"create the daily note file"`
 		Version struct {
 		} `cmd:"" help:"print version and exit."`
-	}
-
-	query struct {
-		Search struct {
-			IssueCount githubv4.Int
-			Edges      []struct {
-				Node struct {
-					Issue struct {
-						Title string
-						Url   string
-					} `graphql:"... on Issue"`
-					PullRequest struct {
-						Title string
-						Url   string
-					} `graphql:"... on PullRequest"`
-				}
-			}
-		} `graphql:"search(first: 100, type: ISSUE, query:$searchQuery)"`
 	}
 
 	version = "0.1.0"
@@ -67,15 +47,10 @@ func LoadConfigFromFile(filename string) (config, error) {
 	return c, err
 }
 
-type githubTask struct {
-	Title string
-	URL   string
-}
-
 type content struct {
 	Weekday        string
 	RecurringTasks []string
-	AssignedIssues []githubTask
+	AssignedIssues []github.Task
 }
 
 func main() {
@@ -121,7 +96,7 @@ func dailyPrep() {
 		c.RecurringTasks = append(c.RecurringTasks, markdownTask)
 	}
 
-	if c.AssignedIssues, err = GetAssignedTasks(token, cfg.GitHub.TaskQuery); err != nil {
+	if c.AssignedIssues, err = github.GetAssignedTasks(token, cfg.GitHub.TaskQuery); err != nil {
 		fmt.Println("error getting assigned issues")
 		fmt.Println(err)
 	}
@@ -163,41 +138,4 @@ func printAndAppendToFile(filename, content string) error {
 	defer f.Close()
 	_, err = f.WriteString(content)
 	return err
-}
-
-func GetAssignedTasks(token, searchQuery string) ([]githubTask, error) {
-
-	tasks := make([]githubTask, 0, 10)
-
-	variables := map[string]interface{}{
-		"searchQuery": githubv4.String(searchQuery),
-	}
-
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	httpClient := oauth2.NewClient(context.Background(), src)
-
-	client := githubv4.NewClient(httpClient)
-
-	if err := client.Query(context.Background(), &query, variables); err != nil {
-		return tasks, err
-	}
-	for _, edge := range query.Search.Edges {
-		t := githubTask{}
-		if edge.Node.Issue.Title != "" &&
-			edge.Node.Issue.Url != "" {
-			t.Title = fmt.Sprintf("%s", edge.Node.Issue.Title)
-			t.URL = fmt.Sprintf("%s", edge.Node.Issue.Url)
-		}
-		if edge.Node.PullRequest.Title != "" &&
-			edge.Node.PullRequest.Url != "" {
-			t.Title = fmt.Sprintf("%s", edge.Node.PullRequest.Title)
-			t.URL = fmt.Sprintf("%s", edge.Node.PullRequest.Url)
-		}
-		tasks = append(tasks, t)
-	}
-
-	return tasks, nil
-
 }

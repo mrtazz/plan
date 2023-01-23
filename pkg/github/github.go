@@ -6,6 +6,8 @@ import (
 
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
+
+	"github.com/mrtazz/plan/pkg/task"
 )
 
 type Task struct {
@@ -37,9 +39,9 @@ var (
 	}
 )
 
-func GetAssignedTasks(token, searchQuery string) ([]Task, error) {
+func GetAssignedTasks(token, searchQuery string) ([]task.Task, error) {
 
-	tasks := make([]Task, 0, 10)
+	tasks := make([]task.Task, 0, 10)
 
 	variables := map[string]interface{}{
 		"searchQuery": githubv4.String(searchQuery),
@@ -58,14 +60,14 @@ func GetAssignedTasks(token, searchQuery string) ([]Task, error) {
 	for _, edge := range query.Search.Edges {
 		if edge.Node.Issue.Title != "" &&
 			edge.Node.Issue.Url != "" {
-			tasks = append(tasks, Task{
+			tasks = append(tasks, &Task{
 				title: fmt.Sprintf("%s", edge.Node.Issue.Title),
 				url:   fmt.Sprintf("%s", edge.Node.Issue.Url),
 			})
 		}
 		if edge.Node.PullRequest.Title != "" &&
 			edge.Node.PullRequest.Url != "" {
-			tasks = append(tasks, Task{
+			tasks = append(tasks, &Task{
 				title: fmt.Sprintf("%s", edge.Node.PullRequest.Title),
 				url:   fmt.Sprintf("%s", edge.Node.PullRequest.Url),
 			})

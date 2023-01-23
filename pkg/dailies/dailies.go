@@ -61,14 +61,14 @@ func NewNote(assignedTasks, recurringTasks []task.Task) *Note {
 	return n
 }
 
-func (n *Note) WithTemplate(tpl string) Note {
-	newNote := *n
+func (n *Note) WithTemplate(tpl string) *Note {
+	newNote := n
 	n.template = tpl
 	return newNote
 }
 
-func (n *Note) WithDate(t time.Time) Note {
-	newNote := *n
+func (n *Note) WithDate(t time.Time) *Note {
+	newNote := n
 	clk := clock.NewMock()
 	clk.Set(t)
 	n.clock = clk

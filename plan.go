@@ -1,17 +1,16 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"text/template"
 	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/mrtazz/plan/pkg/github"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
+
+	"github.com/mrtazz/plan/pkg/config"
+	"github.com/mrtazz/plan/pkg/dailies"
 )
 
 var (
@@ -27,31 +26,6 @@ var (
 
 	version = "0.1.0"
 )
-
-type config struct {
-	RecurringTasks map[string][]string `yaml:"recurring_tasks"`
-	DailyTemplate  string              `yaml:"daily_template"`
-	GitHub         struct {
-		Token     string `yaml:"token,omitempty"`
-		TaskQuery string `yaml:"task_query"`
-	} `yaml:"github,omitempty"`
-}
-
-func LoadConfigFromFile(filename string) (config, error) {
-	var c config
-	yamlFile, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return c, err
-	}
-	err = yaml.Unmarshal(yamlFile, &c)
-	return c, err
-}
-
-type content struct {
-	Weekday        string
-	RecurringTasks []string
-	AssignedIssues []github.Task
-}
 
 func main() {
 
@@ -69,7 +43,7 @@ func main() {
 
 func dailyPrep() {
 
-	cfg, err := LoadConfigFromFile(flags.ConfigFile)
+	cfg, err := config.LoadConfigFromFile(flags.ConfigFile)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error":       err.Error(),
@@ -78,55 +52,35 @@ func dailyPrep() {
 		os.Exit(1)
 	}
 
-	now := time.Now()
 	token := os.Getenv("ISSUES_TOKEN_GITHUB")
 
-	weekday := now.Weekday().String()
-	dailyNote := fmt.Sprintf("./dailies/%s.md", now.Format("20060102"))
+	assignedIssues, err := github.GetAssignedTasks(token, cfg.GitHub.TaskQuery)
 
-	fmt.Printf("Today's journal file is %s.\n", dailyNote)
-	todayTasks := cfg.RecurringTasks[weekday]
-
-	c := content{
-		Weekday: weekday,
-	}
-
-	for _, task := range todayTasks {
-		markdownTask := fmt.Sprintf("- [ ] %s\n", task)
-		c.RecurringTasks = append(c.RecurringTasks, markdownTask)
-	}
-
-	if c.AssignedIssues, err = github.GetAssignedTasks(token, cfg.GitHub.TaskQuery); err != nil {
+	if err != nil {
 		fmt.Println("error getting assigned issues")
 		fmt.Println(err)
 	}
 
-	out, err := renderTemplate(cfg.DailyTemplate, c)
+	todayPlan := dailies.NewNote(assignedIssues,
+		cfg.GetRecurringTasks(time.Now().Weekday().String()))
+
+	if cfg.DailyTemplate != "" {
+		todayPlan = todayPlan.WithTemplate(cfg.DailyTemplate)
+	}
+
+	dailyNoteString, err := todayPlan.Render()
 	if err != nil {
-		fmt.Println("error rendering template")
+		fmt.Println("error rendering daily note")
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	if flags.DailyPrep.NoDryRun {
-		printAndAppendToFile(dailyNote, out)
+		printAndAppendToFile(todayPlan.Filepath(), dailyNoteString)
 	} else {
-		fmt.Println(out)
+		fmt.Println(dailyNoteString)
 	}
 
-}
-
-func renderTemplate(tpl string, c content) (string, error) {
-	tmpl, err := template.New("test").Parse(tpl)
-	if err != nil {
-		return "", err
-	}
-	var b bytes.Buffer
-	err = tmpl.Execute(&b, c)
-	if err != nil {
-		return "", err
-	}
-	return b.String(), nil
 }
 
 func printAndAppendToFile(filename, content string) error {

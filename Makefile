@@ -3,7 +3,6 @@ BINDIR := bin
 $(BINDIR):
 	install -d $@
 
-.DEFAULT_GOAL: build
 
 .PHONY: build
 build: $(BINDIR)
@@ -15,3 +14,5 @@ test:
 .PHONY: install
 install:
 	@go install .
+
+.DEFAULT_GOAL := build

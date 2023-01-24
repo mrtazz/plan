@@ -35,7 +35,7 @@ const (
 
 func main() {
 
-	ctx := kong.Parse(&flags)
+	ctx := kong.Parse(&flags, kong.UsageOnError())
 	switch ctx.Command() {
 	case "daily-prep":
 		dailyPrep()
@@ -43,7 +43,7 @@ func main() {
 		fmt.Printf("plan: version %s %s", version, goversion)
 		return
 	default:
-		log.Fatal("Unknown command: " + ctx.Command())
+		ctx.FatalIfErrorf(fmt.Errorf("Unknown command: " + ctx.Command()))
 	}
 }
 

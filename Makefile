@@ -3,7 +3,10 @@ VERSION := $(shell git describe --tags --always --dirty)
 GOVERSION := $(shell go version)
 LDFLAGS := -X 'main.version=$(VERSION)' \
            -X 'main.goversion=$(GOVERSION)'
+BUILD_GOOS ?= $(shell go env GOOS)
+BUILD_GOARCH ?= $(shell go env GOARCH)
 
+CHECKSUM_FILE := checksums.txt
 
 $(BINDIR):
 	install -d $@
@@ -11,13 +14,19 @@ $(BINDIR):
 
 .PHONY: build
 build: $(BINDIR)
-	@go build -ldflags "$(LDFLAGS)" -o bin/plan plan.go
+	GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build -ldflags "$(LDFLAGS)" -o bin/plan plan.go
+
+.PHONY: build-standalone
+build-standalone: build
+	mv bin/plan plan-$(VERSION).$(BUILD_GOOS).$(BUILD_GOARCH)
+	shasum -a 256 plan-$(VERSION).$(BUILD_GOOS).$(BUILD_GOARCH) >> $(CHECKSUM_FILE)
+
 .PHONY: test
 test:
-	@go test -v ./...
+	go test -v ./...
 
 .PHONY: install
 install:
-	@go install -ldflags "$(LDFLAGS)" .
+	go install -ldflags "$(LDFLAGS)" .
 
 .DEFAULT_GOAL := build

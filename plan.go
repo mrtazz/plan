@@ -18,13 +18,19 @@ var (
 		Debug      bool   `help:"Enable debug mode."`
 		ConfigFile string `default:".plan.yaml" help:"path to the config file."`
 		DailyPrep  struct {
-			NoDryRun bool `help:"whether to actually write the daily note"`
+			Day      string `help:"day to write daily note for in '2022-12-31' format"`
+			NoDryRun bool   `help:"whether to actually write the daily note"`
 		} `cmd:"" help:"create the daily note file"`
 		Version struct {
 		} `cmd:"" help:"print version and exit."`
 	}
 
-	version = "0.1.0"
+	version   = "dev"
+	goversion = "na"
+)
+
+const (
+	dayFlagFormat = "2006-01-02"
 )
 
 func main() {
@@ -34,7 +40,7 @@ func main() {
 	case "daily-prep":
 		dailyPrep()
 	case "version":
-		fmt.Printf(version)
+		fmt.Printf("plan: version %s %s", version, goversion)
 		return
 	default:
 		log.Fatal("Unknown command: " + ctx.Command())
@@ -66,6 +72,16 @@ func dailyPrep() {
 
 	if cfg.DailyTemplate != "" {
 		todayPlan = todayPlan.WithTemplate(cfg.DailyTemplate)
+	}
+
+	if flags.DailyPrep.Day != "" {
+		t, err := time.Parse(dayFlagFormat, flags.DailyPrep.Day)
+		if err != nil {
+			fmt.Println("error parsing provided date")
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		todayPlan = todayPlan.WithDate(t)
 	}
 
 	dailyNoteString, err := todayPlan.Render()

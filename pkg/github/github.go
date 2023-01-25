@@ -58,20 +58,18 @@ func GetAssignedTasks(token, searchQuery string) ([]task.Task, error) {
 		return tasks, err
 	}
 	for _, edge := range query.Search.Edges {
+		t := &Task{}
 		if edge.Node.Issue.Title != "" &&
 			edge.Node.Issue.Url != "" {
-			tasks = append(tasks, &Task{
-				title: fmt.Sprintf("%s", edge.Node.Issue.Title),
-				url:   fmt.Sprintf("%s", edge.Node.Issue.Url),
-			})
+			t.title = fmt.Sprintf("%s", edge.Node.Issue.Title)
+			t.url = fmt.Sprintf("%s", edge.Node.Issue.Url)
 		}
 		if edge.Node.PullRequest.Title != "" &&
 			edge.Node.PullRequest.Url != "" {
-			tasks = append(tasks, &Task{
-				title: fmt.Sprintf("%s", edge.Node.PullRequest.Title),
-				url:   fmt.Sprintf("%s", edge.Node.PullRequest.Url),
-			})
+			t.title = fmt.Sprintf("%s", edge.Node.PullRequest.Title)
+			t.url = fmt.Sprintf("%s", edge.Node.PullRequest.Url)
 		}
+		tasks = append(tasks, t)
 	}
 
 	return tasks, nil

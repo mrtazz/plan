@@ -51,12 +51,12 @@ daily_template: |-
   It's {{ .Weekday }} today.
   You have {{ len .RecurringTasks }} recurring tasks today:
   {{ range .RecurringTasks }}
-  {{- . }}
+  {{- .Name }}
   {{- end }}
 
   You have {{ len .AssignedTasks }} issues assigned:
   {{- range .AssignedTasks }}
-  - [ ] {{ .Title }} [link]({{ .URL }})
+  - [ ] {{ .Name }} [link]({{ .URL }})
   {{- end }}
 
   ## Log

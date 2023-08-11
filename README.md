@@ -64,3 +64,12 @@ daily_template: |-
 github:
   task_query: "assignee:mrtazz org:github state:open"
 ```
+
+## Installation
+
+There are pre-built binaries [on the releases page](https://github.com/mrtazz/plan/releases/)
+or the go standard way should also work, e.g.:
+
+```
+go install github.com/mrtazz/plan@latest
+```

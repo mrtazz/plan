@@ -6,7 +6,11 @@ LDFLAGS := -X 'main.version=$(VERSION)' \
 BUILD_GOOS ?= $(shell go env GOOS)
 BUILD_GOARCH ?= $(shell go env GOARCH)
 
-CHECKSUM_FILE := checksums.txt
+RELEASE_ARTIFACTS_DIR := .release_artifacts
+CHECKSUM_FILE := $(RELEASE_ARTIFACTS_DIR)/checksums.txt
+
+$(RELEASE_ARTIFACTS_DIR):
+	install -d $@
 
 $(BINDIR):
 	install -d $@
@@ -17,9 +21,9 @@ build: $(BINDIR)
 	GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build -ldflags "$(LDFLAGS)" -o bin/plan plan.go
 
 .PHONY: build-standalone
-build-standalone: build
-	mv bin/plan plan-$(VERSION).$(BUILD_GOOS).$(BUILD_GOARCH)
-	shasum -a 256 plan-$(VERSION).$(BUILD_GOOS).$(BUILD_GOARCH) >> $(CHECKSUM_FILE)
+build-standalone: build $(RELEASE_ARTIFACTS_DIR)
+	mv bin/plan $(RELEASE_ARTIFACTS_DIR)/plan-$(VERSION).$(BUILD_GOOS).$(BUILD_GOARCH)
+	shasum -a 256 $(RELEASE_ARTIFACTS_DIR)/plan-$(VERSION).$(BUILD_GOOS).$(BUILD_GOARCH) >> $(CHECKSUM_FILE)
 
 .PHONY: test
 test:
@@ -30,3 +34,8 @@ install:
 	go install -ldflags "$(LDFLAGS)" .
 
 .DEFAULT_GOAL := build
+
+.PHONY: github-release
+github-release:
+	gh release create $(VERSION) --title 'Release $(VERSION)' \
+	 	--notes-file docs/releases/$(VERSION).md $(RELEASE_ARTIFACTS_DIR)/*

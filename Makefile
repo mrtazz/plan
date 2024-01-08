@@ -15,14 +15,35 @@ $(RELEASE_ARTIFACTS_DIR):
 $(BINDIR):
 	install -d $@
 
+###
+# Man page build tasks
+###
+
+BUILD_DAY := $(shell date -u +"%Y-%m-%d")
+MANPAGE := docs/man/plan.1
+PREFIX ?= "/usr/local"
+
+.PHONY: man
+man: $(MANPAGE)
+
+$(MANPAGE): $(MANPAGE).md
+	sed "s/VERSION_PLACEHOLDER/${VERSION}/g" $< | \
+	 	sed "s/DATE_PLACEHOLDER/${BUILD_DAY}/g" | \
+	 	pandoc --standalone -f markdown -t man -o $@
+
+.PHONY: local-install
+local-install:
+	$(MAKE) install PREFIX=usr/local
+
 
 .PHONY: build
 build: $(BINDIR)
 	GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build -ldflags "$(LDFLAGS)" -o bin/plan plan.go
 
 .PHONY: build-standalone
-build-standalone: build $(RELEASE_ARTIFACTS_DIR)
+build-standalone: build man $(RELEASE_ARTIFACTS_DIR)
 	mv bin/plan $(RELEASE_ARTIFACTS_DIR)/plan-$(VERSION).$(BUILD_GOOS).$(BUILD_GOARCH)
+	mv $(MANPAGE) $(RELEASE_ARTIFACTS_DIR)/
 	shasum -a 256 $(RELEASE_ARTIFACTS_DIR)/plan-$(VERSION).$(BUILD_GOOS).$(BUILD_GOARCH) >> $(CHECKSUM_FILE)
 
 .PHONY: test

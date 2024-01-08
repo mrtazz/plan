@@ -23,8 +23,4 @@ jobs:
         BUILD_GOARCH=amd64 BUILD_GOOS=darwin  make build-standalone
 
     - name: create release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          plan-*
-          checksums.txt
+      run: make github-release

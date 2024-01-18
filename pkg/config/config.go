@@ -2,6 +2,7 @@ package config
 
 import (
 	"io/ioutil"
+	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -16,6 +17,14 @@ type Config struct {
 		Token     string `yaml:"token,omitempty"`
 		TaskQuery string `yaml:"task_query"`
 	} `yaml:"github,omitempty"`
+}
+
+type ValidationError struct {
+	message string
+}
+
+func (v ValidationError) Error() string {
+	return v.message
 }
 
 func (c Config) GetRecurringTasks(weekday string) []task.Task {
@@ -34,4 +43,16 @@ func LoadConfigFromFile(filename string) (Config, error) {
 	}
 	err = yaml.Unmarshal(yamlFile, &c)
 	return c, err
+}
+
+func ValidateConfig(filename string) error {
+	c, err := LoadConfigFromFile(filename)
+	if err != nil {
+		return ValidationError{message: err.Error()}
+	}
+
+	if _, err = time.Parse(c.DateFormat, c.DateFormat); err != nil {
+		return ValidationError{message: err.Error()}
+	}
+	return nil
 }

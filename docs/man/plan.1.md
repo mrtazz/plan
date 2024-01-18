@@ -17,23 +17,26 @@ plan — a command line tool for personal planning
 
 # SYNOPSIS
 
-`plan daily-prep [<options>]`
+`plan <subcommand> [<options>]`
 
-
-# EXAMPLES
+# SUBCOMMANDS
 
 `plan daily-prep`
 : Create a daily note based on the configure template.
+
+`plan validate-config --config_file=<plan.yaml>`
+: Validate a provided config file.
 
 
 # DESCRIPTION
 
 `plan` is a command line utility to help with personal planning and note
 taking. The premise is that notes are plain text files (assumed to be in
-markdown format) in a folder. The tooling can then generate a daily notes
-template based on
+markdown format) in a folder. The tooling can then generate a daily note based
+on a configured (or default) template. The main interaction for notes is
+intended to be your favourite editor while `plan` provides tooling around it.
 
-# Configuration File
+# CONFIGURATION FILE
 
 `plan` reads a `.plan.yaml` configuration file in the current directory. That
 way the config file can be colocated in the notes directory and different
@@ -65,11 +68,16 @@ daily_template: |-
 
   ## Log
 
+date_format: "2006-01-02"
+
 github:
   task_query: "assignee:mrtazz org:github state:open"
 ```
 
-## Recurring tasks
+Validity of a configuration file can be checked with the `validate-config`
+subcommand.
+
+## RECURRING TASKS
 
 `plan` supports simple weekly recurring tasks which can be added to the
 configuration file. This is an array of strings that are available in the
@@ -79,6 +87,22 @@ template via the `{{ .RecurringTasks }}` templating macro.
 the same way. Tasks here are taken from GitHub and have a `{{  .Name }}` and
 `{{ .URL }}` attribute available for template rendering. In order for this to
 work, a task query in GitHub search format needs to be configured.
+
+## NOTE TEMPLATE RENDERING
+
+The daily note is rendered with a small set of context variables that can be
+used in templating. The templating engine is Go's `text/template` and should
+be expected to behave in the same way:
+
+- `{{ .Weekday }}`: Prints the current day of the week
+- `{{ .FormattedDate }}`: Prints the current date formatted based on the
+  `date_format` config key (default: "2006-01-02")
+- `{[ .RecurringTasks }}`: An array of recurring tasks for the day as set in the
+  configuration file. Can be iterated over and accessed with `{{ .Name }}`
+  within
+- `{{ .AssignedTasks }}`: An array of assigned issues from GitHub, based on
+  the configured `github.task_query`. Can be iterated over and accessed with
+  `{{ .Name }}` and `{{ .URL }}`
 
 
 # META OPTIONS AND COMMANDS

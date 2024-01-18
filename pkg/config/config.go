@@ -11,6 +11,7 @@ import (
 type Config struct {
 	RecurringTasks map[string][]string `yaml:"recurring_tasks"`
 	DailyTemplate  string              `yaml:"daily_template"`
+	DateFormat     string              `yaml:"date_format"`
 	GitHub         struct {
 		Token     string `yaml:"token,omitempty"`
 		TaskQuery string `yaml:"task_query"`

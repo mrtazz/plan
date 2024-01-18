@@ -70,6 +70,10 @@ func dailyPrep() {
 	todayPlan := dailies.NewNote(assignedIssues,
 		cfg.GetRecurringTasks(time.Now().Weekday().String()))
 
+	if cfg.DateFormat != "" {
+		todayPlan = todayPlan.WithDateFormat(cfg.DateFormat)
+	}
+
 	if cfg.DailyTemplate != "" {
 		todayPlan = todayPlan.WithTemplate(cfg.DailyTemplate)
 	}

@@ -16,6 +16,8 @@ func TestDailyNoteRender(t *testing.T) {
 		recurringTasks  []task.Task
 		expectedContent string
 		day             string
+		dateFormat      string
+		template        string
 	}{
 		"default": {
 			day: "2023-01-20",
@@ -40,12 +42,29 @@ You have 1 assigned tasks:
 
 `,
 		},
+		"withDefaultDateFormat": {
+			day:             "2023-01-20",
+			template:        "## Today {{ .FormattedDate }}",
+			expectedContent: `## Today 2023-01-20`,
+		},
+		"withChangedDateFormat": {
+			day:             "2023-01-20",
+			dateFormat:      "2006/01/02",
+			template:        "## Today {{ .FormattedDate }}",
+			expectedContent: `## Today 2023/01/20`,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			day, err := time.Parse("2006-01-02", tc.day)
 			n := NewNote(tc.assignedTasks, tc.recurringTasks).WithDate(day)
+			if tc.dateFormat != "" {
+				n = n.WithDateFormat(tc.dateFormat)
+			}
+			if tc.template != "" {
+				n = n.WithTemplate(tc.template)
+			}
 			content, err := n.Render()
 			assert.Equal(nil, err)
 			assert.Equal(tc.expectedContent, content)

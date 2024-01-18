@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	defaultNotesDir      = "./dailies"
-	defaultNotesSuffix   = ".md"
-	defaultNotesFormat   = "20060102"
-	defaultNotesTemplate = `## Overview
+	defaultNotesDir          = "./dailies"
+	defaultNotesSuffix       = ".md"
+	defaultNotesFormat       = "20060102"
+	defaultContentDateFormat = "2006-01-02"
+	defaultNotesTemplate     = `## Overview
 
 It's {{ .Weekday }} today.
 
@@ -36,9 +37,18 @@ You have {{ len .AssignedTasks }} assigned tasks:
 )
 
 type Content struct {
-	Weekday        string
+	date           time.Time
+	dateFormat     string
 	RecurringTasks []task.Task
 	AssignedTasks  []task.Task
+}
+
+func (c Content) Weekday() string {
+	return c.date.Weekday().String()
+}
+
+func (c Content) FormattedDate() string {
+	return c.date.Format(c.dateFormat)
 }
 
 type Note struct {
@@ -53,7 +63,8 @@ func NewNote(assignedTasks, recurringTasks []task.Task) *Note {
 		clock:    clk,
 		template: defaultNotesTemplate,
 		content: Content{
-			Weekday:        clk.Now().Weekday().String(),
+			date:           clk.Now(),
+			dateFormat:     defaultContentDateFormat,
 			RecurringTasks: recurringTasks,
 			AssignedTasks:  assignedTasks,
 		},
@@ -67,12 +78,18 @@ func (n *Note) WithTemplate(tpl string) *Note {
 	return newNote
 }
 
+func (n *Note) WithDateFormat(format string) *Note {
+	newNote := n
+	newNote.content.dateFormat = format
+	return newNote
+}
+
 func (n *Note) WithDate(t time.Time) *Note {
 	newNote := n
 	clk := clock.NewMock()
 	clk.Set(t)
-	n.clock = clk
-	n.content.Weekday = clk.Now().Weekday().String()
+	newNote.clock = clk
+	newNote.content.date = clk.Now()
 	return newNote
 }
 

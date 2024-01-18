@@ -21,6 +21,8 @@ var (
 			Day      string `help:"day to write daily note for in '2022-12-31' format"`
 			NoDryRun bool   `help:"whether to actually write the daily note"`
 		} `cmd:"" help:"create the daily note file"`
+		ValidateConfig struct {
+		} `cmd:"" help:"Validate the passed config and return."`
 		Version struct {
 		} `cmd:"" help:"print version and exit."`
 	}
@@ -37,11 +39,22 @@ func main() {
 
 	ctx := kong.Parse(&flags, kong.UsageOnError())
 	switch ctx.Command() {
+
 	case "daily-prep":
 		dailyPrep()
+
+	case "validate-config":
+		if err := config.ValidateConfig(flags.ConfigFile); err != nil {
+			fmt.Printf("Failed to validate config '%s', got error: %s\n", flags.ConfigFile, err.Error())
+			os.Exit(1)
+		}
+		fmt.Printf("Config file '%s' is valid.\n", flags.ConfigFile)
+		return
+
 	case "version":
 		fmt.Printf("plan: version %s %s", version, goversion)
 		return
+
 	default:
 		ctx.FatalIfErrorf(fmt.Errorf("Unknown command: " + ctx.Command()))
 	}

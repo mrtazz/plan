@@ -1,0 +1,13 @@
+recurring_tasks:
+  Monday:
+    - prep the week
+
+  Friday:
+    - wrap up the week
+
+daily_template: |-
+  ## {{ .Weekday }} ({{ .FormattedDate }}
+
+  ## Log
+
+date_format: "2023-%m-%d"

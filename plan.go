@@ -11,6 +11,7 @@ import (
 
 	"github.com/mrtazz/plan/pkg/config"
 	"github.com/mrtazz/plan/pkg/dailies"
+	"github.com/mrtazz/plan/pkg/screenshots"
 )
 
 var (
@@ -21,6 +22,9 @@ var (
 			Day      string `help:"day to write daily note for in '2022-12-31' format"`
 			NoDryRun bool   `help:"whether to actually write the daily note"`
 		} `cmd:"" help:"create the daily note file"`
+		ImportScreenshots struct {
+			NoDryRun bool `help:"whether to actually create folders and move files"`
+		} `cmd:"" help:"Import screenshots to the plan folder"`
 		ValidateConfig struct {
 		} `cmd:"" help:"Validate the passed config and return."`
 		Version struct {
@@ -50,6 +54,27 @@ func main() {
 		}
 		fmt.Printf("Config file '%s' is valid.\n", flags.ConfigFile)
 		return
+
+	case "import-screenshots":
+		cfg, err := config.LoadConfigFromFile(flags.ConfigFile)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error":       err.Error(),
+				"config-file": flags.ConfigFile,
+			}).Error("failed to parse config")
+			os.Exit(1)
+		}
+		i := screenshots.NewImporter(
+			cfg.ScreenshotImport.Source,
+			cfg.ScreenshotImport.Destination,
+			cfg.ScreenshotImport.FileFormat,
+			flags.ImportScreenshots.NoDryRun,
+		)
+
+		if err = i.ImportToPlanFolder(); err != nil {
+			fmt.Printf("Failed to import screenshots: %s\n", err.Error())
+			os.Exit(1)
+		}
 
 	case "version":
 		fmt.Printf("plan: version %s %s", version, goversion)

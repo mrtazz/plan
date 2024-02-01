@@ -20,6 +20,12 @@ Commands:
   daily-prep
     create the daily note file
 
+  import-screenshots
+    Import screenshots to the plan folder
+
+  validate-config
+    Validate the passed config and return.
+
   version
     print version and exit.
 
@@ -63,6 +69,11 @@ daily_template: |-
 
 github:
   task_query: "assignee:mrtazz org:github state:open"
+
+screenshot_import:
+  source: "~/Desktop"
+  destination: "dailies/20060102_attachments"
+  file_format: "Screenshot 2006-01-02 at 15.04.05.png"
 ```
 
 ## Installation

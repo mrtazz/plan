@@ -24,6 +24,9 @@ plan — a command line tool for personal planning
 `plan daily-prep`
 : Create a daily note based on the configure template.
 
+`plan import-screenshots --config_file=<plan.yaml> [--no-dry-run]`
+: Import screenshots from a location into the plan folder.
+
 `plan validate-config --config_file=<plan.yaml>`
 : Validate a provided config file.
 
@@ -72,6 +75,11 @@ date_format: "2006-01-02"
 
 github:
   task_query: "assignee:mrtazz org:github state:open"
+
+screenshot_import:
+  source: "~/Desktop"
+  destination: "dailies/20060102_attachments"
+  file_format: "Screenshot 2006-01-02 at 15.04.05.png"
 ```
 
 Validity of a configuration file can be checked with the `validate-config`
@@ -103,6 +111,21 @@ be expected to behave in the same way:
 - `{{ .AssignedTasks }}`: An array of assigned issues from GitHub, based on
   the configured `github.task_query`. Can be iterated over and accessed with
   `{{ .Name }}` and `{{ .URL }}`
+
+# IMPORTING SCREENSHOTS
+
+The `plan` subcommand `import-screenshots` provides a way to consolidate
+screenshots in the plan folder for easier referencing in notes. On running the
+command it will list all screenshots (this technically works with any file and
+not just images) in the source directory that match the provided file format.
+If the command is run with the `--no-dry-run` flag provided, the files will be
+moved to the destination directory.
+
+Both the file format as well as the destination directory can contain golang
+time format directives which will be interpreted as such. That makes it
+possible to extract dates from screenshots and file them in date base folders.
+The config file section that is used for configuration is `screenshot_import`
+and the section `CONFIGURATION FILE` above has an example.
 
 
 # META OPTIONS AND COMMANDS

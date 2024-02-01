@@ -1,4 +1,5 @@
 bin/*
 plan
 docs/man/plan.1
-
+pkg/screenshots/testdata/input/*
+pkg/screenshots/testdata/output/*

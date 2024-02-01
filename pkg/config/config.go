@@ -17,6 +17,11 @@ type Config struct {
 		Token     string `yaml:"token,omitempty"`
 		TaskQuery string `yaml:"task_query"`
 	} `yaml:"github,omitempty"`
+	ScreenshotImport struct {
+		Source      string `yaml:"source"`
+		Destination string `yaml:"destination"`
+		FileFormat  string `yaml:"file_format"`
+	} `yaml:"screenshot_import,omitempty"`
 }
 
 type ValidationError struct {
@@ -54,5 +59,6 @@ func ValidateConfig(filename string) error {
 	if _, err = time.Parse(c.DateFormat, c.DateFormat); err != nil {
 		return ValidationError{message: err.Error()}
 	}
+
 	return nil
 }

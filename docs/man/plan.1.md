@@ -14,7 +14,6 @@ date: DATE_PLACEHOLDER
 
 plan — a command line tool for personal planning
 
-
 # SYNOPSIS
 
 `plan <subcommand> [<options>]`
@@ -23,6 +22,9 @@ plan — a command line tool for personal planning
 
 `plan daily-prep`
 : Create a daily note based on the configure template.
+
+`plan get-assigned-issues`
+: Get issues assigned to oneself and print them as a markdown checklist.
 
 `plan import-screenshots --config_file=<plan.yaml> [--no-dry-run]`
 : Import screenshots from a location into the plan folder.

@@ -22,6 +22,9 @@ var (
 			Day      string `help:"day to write daily note for in '2022-12-31' format"`
 			NoDryRun bool   `help:"whether to actually write the daily note"`
 		} `cmd:"" help:"create the daily note file"`
+		GetAssignedIssues struct {
+			Format string `default:"markdown" help:"which format to use for outputting issues"`
+		} `cmd:"" help:"Retrieve assigned issues"`
 		ImportScreenshots struct {
 			NoDryRun bool `help:"whether to actually create folders and move files"`
 		} `cmd:"" help:"Import screenshots to the plan folder"`
@@ -46,6 +49,9 @@ func main() {
 
 	case "daily-prep":
 		dailyPrep()
+
+	case "get-assigned-issues":
+		getAssignedIssues()
 
 	case "validate-config":
 		if err := config.ValidateConfig(flags.ConfigFile); err != nil {
@@ -137,6 +143,38 @@ func dailyPrep() {
 		printAndAppendToFile(todayPlan.Filepath(), dailyNoteString)
 	} else {
 		fmt.Println(dailyNoteString)
+	}
+
+}
+
+func getAssignedIssues() {
+	cfg, err := config.LoadConfigFromFile(flags.ConfigFile)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error":       err.Error(),
+			"config-file": flags.ConfigFile,
+		}).Error("failed to parse config")
+		os.Exit(1)
+	}
+
+	token := os.Getenv("ISSUES_TOKEN_GITHUB")
+
+	assignedIssues, err := github.GetAssignedTasks(token, cfg.GitHub.TaskQuery)
+
+	if err != nil {
+		fmt.Println("error getting assigned issues")
+		fmt.Println(err)
+	}
+
+	switch flags.GetAssignedIssues.Format {
+	case "markdown":
+		for _, task := range assignedIssues {
+			fmt.Printf("- [ ] [%s](%s)\n", task.Name(), task.URL())
+
+		}
+
+	default:
+		fmt.Printf("Unknown format: '%s'\n", flags.GetAssignedIssues.Format)
 	}
 
 }

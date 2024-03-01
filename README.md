@@ -17,8 +17,17 @@ Flags:
       --config-file=".plan.yaml"    path to the config file.
 
 Commands:
+  add-todo <text> ...
+    Add a todo to the current daily note.
+
+  add-note <text> ...
+    Add a note to the current daily note.
+
   daily-prep
     create the daily note file
+
+  get-assigned-issues
+    Retrieve assigned issues
 
   import-screenshots
     Import screenshots to the plan folder
@@ -30,6 +39,7 @@ Commands:
     print version and exit.
 
 Run "plan <command> --help" for more information on a command.
+
 ```
 
 ## Configuration

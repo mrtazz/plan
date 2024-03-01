@@ -20,6 +20,12 @@ plan — a command line tool for personal planning
 
 # SUBCOMMANDS
 
+`plan add-note <text> ...`
+: Add a note entry to the current daily note. This will create the file if it doesn't exist already.
+
+`plan add-todo <text> ...`
+: Add a todo entry to the current daily note. This will create the file if it doesn't exist already.
+
 `plan daily-prep`
 : Create a daily note based on the configure template.
 

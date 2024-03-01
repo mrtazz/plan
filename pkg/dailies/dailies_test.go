@@ -58,7 +58,7 @@ You have 1 assigned tasks:
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			day, err := time.Parse("2006-01-02", tc.day)
-			n := NewNote(tc.assignedTasks, tc.recurringTasks).WithDate(day)
+			n := NewNote().WithAssignedTasks(tc.assignedTasks).WithRecurringTasks(tc.recurringTasks).WithDate(day)
 			if tc.dateFormat != "" {
 				n = n.WithDateFormat(tc.dateFormat)
 			}

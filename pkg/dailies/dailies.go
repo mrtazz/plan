@@ -57,19 +57,29 @@ type Note struct {
 	content  Content
 }
 
-func NewNote(assignedTasks, recurringTasks []task.Task) *Note {
+func NewNote() *Note {
 	clk := clock.New()
 	n := &Note{
 		clock:    clk,
 		template: defaultNotesTemplate,
 		content: Content{
-			date:           clk.Now(),
-			dateFormat:     defaultContentDateFormat,
-			RecurringTasks: recurringTasks,
-			AssignedTasks:  assignedTasks,
+			date:       clk.Now(),
+			dateFormat: defaultContentDateFormat,
 		},
 	}
 	return n
+}
+
+func (n *Note) WithAssignedTasks(tasks []task.Task) *Note {
+	newNote := n
+	newNote.content.AssignedTasks = tasks
+	return newNote
+}
+
+func (n *Note) WithRecurringTasks(tasks []task.Task) *Note {
+	newNote := n
+	newNote.content.RecurringTasks = tasks
+	return newNote
 }
 
 func (n *Note) WithTemplate(tpl string) *Note {

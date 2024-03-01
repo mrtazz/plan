@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -18,7 +19,13 @@ var (
 	flags struct {
 		Debug      bool   `help:"Enable debug mode."`
 		ConfigFile string `default:".plan.yaml" help:"path to the config file."`
-		DailyPrep  struct {
+		AddTodo    struct {
+			Text []string `arg:"" name:"text" help:"text to add as todo."`
+		} `cmd:"" help:"Add a todo to the current daily note."`
+		AddNote struct {
+			Text []string `arg:"" name:"text" help:"text to add as a note."`
+		} `cmd:"" help:"Add a note to the current daily note."`
+		DailyPrep struct {
 			Day      string `help:"day to write daily note for in '2022-12-31' format"`
 			NoDryRun bool   `help:"whether to actually write the daily note"`
 		} `cmd:"" help:"create the daily note file"`
@@ -46,6 +53,16 @@ func main() {
 
 	ctx := kong.Parse(&flags, kong.UsageOnError())
 	switch ctx.Command() {
+
+	case "add-todo <text>":
+		todayPlan := dailies.NewNote()
+		text := fmt.Sprintf("\n- [ ] %s\n", strings.Join(flags.AddTodo.Text, " "))
+		appendToFile(todayPlan.Filepath(), text)
+
+	case "add-note <text>":
+		todayPlan := dailies.NewNote()
+		text := fmt.Sprintf("\n- %s\n", strings.Join(flags.AddNote.Text, " "))
+		appendToFile(todayPlan.Filepath(), text)
 
 	case "daily-prep":
 		dailyPrep()
@@ -111,8 +128,8 @@ func dailyPrep() {
 		fmt.Println(err)
 	}
 
-	todayPlan := dailies.NewNote(assignedIssues,
-		cfg.GetRecurringTasks(time.Now().Weekday().String()))
+	todayPlan := dailies.NewNote().WithAssignedTasks(assignedIssues).
+		WithRecurringTasks(cfg.GetRecurringTasks(time.Now().Weekday().String()))
 
 	if cfg.DateFormat != "" {
 		todayPlan = todayPlan.WithDateFormat(cfg.DateFormat)
@@ -140,7 +157,8 @@ func dailyPrep() {
 	}
 
 	if flags.DailyPrep.NoDryRun {
-		printAndAppendToFile(todayPlan.Filepath(), dailyNoteString)
+		fmt.Println(dailyNoteString)
+		appendToFile(todayPlan.Filepath(), dailyNoteString)
 	} else {
 		fmt.Println(dailyNoteString)
 	}
@@ -179,8 +197,7 @@ func getAssignedIssues() {
 
 }
 
-func printAndAppendToFile(filename, content string) error {
-	fmt.Println(content)
+func appendToFile(filename, content string) error {
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
